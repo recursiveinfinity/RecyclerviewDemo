@@ -16,11 +16,19 @@ import java.util.List;
 
 public class NamesAdapter extends RecyclerView.Adapter<NamesAdapter.NameViewHolder> {
 
-    private final List<String> data;
+    private final List<GithubProfile> data;
 
-    public NamesAdapter(List<String> data) {
+    private static OnNameSelectedListener listener = null;
+
+    public NamesAdapter(OnNameSelectedListener listener) {
         this.data = new ArrayList<>();
-        this.data.addAll(data);
+        NamesAdapter.listener = listener;
+    }
+
+    public void setData(List<GithubProfile> newData) {
+        data.clear();
+        data.addAll(newData);
+        notifyDataSetChanged();
     }
 
 
@@ -35,8 +43,10 @@ public class NamesAdapter extends RecyclerView.Adapter<NamesAdapter.NameViewHold
     @Override
     public void onBindViewHolder(@NonNull NameViewHolder nameViewHolder,
                                  int position) {
-        nameViewHolder.tvName.setText(data.get(position));
-
+        GithubProfile githubProfile = data.get(position);
+        nameViewHolder.tvName.setText(githubProfile.getName());
+        nameViewHolder.tvPublicRepos.setText(
+                Integer.toString(githubProfile.getPublicRepos()));
         int color;
         if (position %2 == 0) {
             color = ContextCompat.getColor(nameViewHolder.itemView.getContext(),
@@ -54,15 +64,24 @@ public class NamesAdapter extends RecyclerView.Adapter<NamesAdapter.NameViewHold
         return data.size();
     }
 
+
     static class NameViewHolder extends RecyclerView.ViewHolder {
 
         TextView tvName;
+        TextView tvPublicRepos;
         ImageView ivIcon;
 
         public NameViewHolder(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvName);
+            tvPublicRepos = itemView.findViewById(R.id.tvPublicRepos);
             ivIcon = itemView.findViewById(R.id.ivIcon);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    listener.onNameSelected(getAdapterPosition());
+                }
+            });
         }
 
     }
