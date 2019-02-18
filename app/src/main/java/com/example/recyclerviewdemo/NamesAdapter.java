@@ -16,7 +16,7 @@ import java.util.List;
 
 public class NamesAdapter extends RecyclerView.Adapter<NamesAdapter.NameViewHolder> {
 
-    private final List<GithubProfile> data;
+    private final List<GithubRepo> data;
 
     private static OnNameSelectedListener listener = null;
 
@@ -25,7 +25,7 @@ public class NamesAdapter extends RecyclerView.Adapter<NamesAdapter.NameViewHold
         NamesAdapter.listener = listener;
     }
 
-    public void setData(List<GithubProfile> newData) {
+    public void setData(List<GithubRepo> newData) {
         data.clear();
         data.addAll(newData);
         notifyDataSetChanged();
@@ -43,10 +43,9 @@ public class NamesAdapter extends RecyclerView.Adapter<NamesAdapter.NameViewHold
     @Override
     public void onBindViewHolder(@NonNull NameViewHolder nameViewHolder,
                                  int position) {
-        GithubProfile githubProfile = data.get(position);
-        nameViewHolder.tvName.setText(githubProfile.getName());
-        nameViewHolder.tvPublicRepos.setText(
-                Integer.toString(githubProfile.getPublicRepos()));
+        GithubRepo githubRepo = data.get(position);
+        nameViewHolder.tvName.setText(githubRepo.getName());
+        nameViewHolder.tvPublicRepos.setText(githubRepo.getDescription());
         int color;
         if (position %2 == 0) {
             color = ContextCompat.getColor(nameViewHolder.itemView.getContext(),

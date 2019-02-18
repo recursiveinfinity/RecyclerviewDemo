@@ -6,9 +6,11 @@ import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONException;
@@ -46,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements OnNameSelectedLis
         recyclerView.setAdapter(namesAdapter);
 
         try {
-            new APIWorker().execute(new URL("https://api.github.com/users/google"));
+            new APIWorker().execute(new URL(Constants.REPO_URL));
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
@@ -92,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements OnNameSelectedLis
                 String line;
                 while((line = bufferedReader.readLine()) != null) {
                     result.append(line);
+
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -105,12 +108,15 @@ public class MainActivity extends AppCompatActivity implements OnNameSelectedLis
             super.onPostExecute(result);
 
                 Gson gson = new Gson();
-                GithubProfile githubProfile = gson.
-                        fromJson(result, GithubProfile.class);
+                List<GithubRepo> repos;
+               /* GithubProfile githubProfile = gson.
+                        fromJson(result, GithubProfile.class);*/
 
-                List<GithubProfile> apiResults = Collections
-                        .singletonList(githubProfile);
-                namesAdapter.setData(apiResults);
+                Log.d("Result", result);
+                repos = gson.fromJson(result, new TypeToken<List<GithubRepo>>(){}.getType());
+
+
+                namesAdapter.setData(repos);
 
 
         }
