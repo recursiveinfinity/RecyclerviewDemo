@@ -26,8 +26,17 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity implements OnNameSelectedListener {
     NamesAdapter namesAdapter = new NamesAdapter(this);
@@ -47,12 +56,33 @@ public class MainActivity extends AppCompatActivity implements OnNameSelectedLis
 
         recyclerView.setAdapter(namesAdapter);
 
-        try {
-            new APIWorker().execute(new URL(Constants.REPO_URL));
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+                .build();
 
+        Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
+                .baseUrl(Constants.BASE_URL)
+                .client(okHttpClient)
+                .addConverterFactory(GsonConverterFactory.create());
+
+        Retrofit retrofit = retrofitBuilder.build();
+
+        GithubService githubService = retrofit.create(GithubService.class);
+
+        githubService.getRepos("microsoft").enqueue(new Callback<List<GithubRepo>>() {
+            @Override
+            public void onResponse(Call<List<GithubRepo>> call, Response<List<GithubRepo>> response) {
+                if (response.isSuccessful()) {
+                    namesAdapter.setData(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<GithubRepo>> call, Throwable t) {
+
+            }
+        });
     }
 
 
@@ -71,54 +101,5 @@ public class MainActivity extends AppCompatActivity implements OnNameSelectedLis
         Toast.makeText(this, "Position: " + position, Toast.LENGTH_SHORT).show();
     }
 
-    class APIWorker extends AsyncTask<URL, Void, String> {
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-
-        @Override
-        protected String doInBackground(URL... urls) {
-            StringBuilder result = new StringBuilder();
-            try {
-                HttpsURLConnection httpsURLConnection = (HttpsURLConnection)
-                        urls[0].openConnection();
-                InputStream inputStream = new
-                        BufferedInputStream(httpsURLConnection.getInputStream());
-
-                BufferedReader bufferedReader = new BufferedReader(
-                        new InputStreamReader(inputStream));
-
-                String line;
-                while((line = bufferedReader.readLine()) != null) {
-                    result.append(line);
-
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return result.toString();
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-                Gson gson = new Gson();
-                List<GithubRepo> repos;
-               /* GithubProfile githubProfile = gson.
-                        fromJson(result, GithubProfile.class);*/
-
-                Log.d("Result", result);
-                repos = gson.fromJson(result, new TypeToken<List<GithubRepo>>(){}.getType());
-
-
-                namesAdapter.setData(repos);
-
-
-        }
-    }
 }
